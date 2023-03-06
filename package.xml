@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+
+    <!-- Package Info -->
+    <name>avl_simulation</name>
+    <version>1.0.0</version>
+    <description>Package containing AVL simulation nodes</description>
+    <maintainer email="eagle138@vt.edu">Stephen Krauss</maintainer>
+    <url type="website">https://cmar.ece.vt.edu/avl</url>
+    <license>TODO</license>
+
+    <!-- Build Tool Dependency -->
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <!-- Documentation Dependency -->
+    <doc_depend>doxygen</doc_depend>
+
+    <!-- ROS Dependencies -->
+    <depend>roscpp</depend>
+    <build_depend>message_generation</build_depend>
+    <exec_depend>message_runtime</exec_depend>
+    <depend>std_msgs</depend>
+    <depend>std_srvs</depend>
+    <depend>geometry_msgs</depend>
+    <depend>sensor_msgs</depend>
+    <depend>rosbridge_server</depend>
+
+    <!-- AVL Package Dependencies -->
+    <depend>avl_core</depend>
+    <depend>avl_msgs</depend>
+    <depend>avl_devices</depend>
+    <depend>avl_navigation</depend>
+
+</package>

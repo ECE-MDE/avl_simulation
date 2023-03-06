@@ -1,0 +1,308 @@
+<launch>
+    <arg name="my_ns" default="1"/>
+    <arg name="vehicle_id" default="1"/>
+    <group ns="$(arg my_ns)">
+        <!-- =================================================================== -->
+        <!-- Vehicle ID Number -->
+        <!-- =================================================================== -->
+        <rosparam param="vehicle_id" subst_value="True"> $(arg vehicle_id)</rosparam>
+
+        <!-- =================================================================== -->
+        <!-- Path to config files -->
+        <!-- =================================================================== -->
+        <arg name="config_folder_path" value="/var/avl_config/$(arg my_ns)/"/>
+
+        <!-- =================================================================== -->
+        <!-- Console Logging Settings -->
+        <!-- =================================================================== -->
+        <rosparam param="/logging/console/enable"> true </rosparam>
+        <rosparam param="/logging/console/log_node"> true </rosparam>
+        <rosparam param="/logging/console/log_data"> false </rosparam>
+        <rosparam param="/logging/console/log_debug"> true </rosparam>
+        <rosparam param="/logging/console/log_info"> true </rosparam>
+        <rosparam param="/logging/console/log_warning"> true </rosparam>
+        <rosparam param="/logging/console/log_error"> true </rosparam>
+
+        <!-- =================================================================== -->
+        <!-- File Logging Settings -->
+        <!-- =================================================================== -->
+        <rosparam param="/logging/file/enable"> true </rosparam>
+        <rosparam param="/logging/file/log_node"> true </rosparam>
+        <rosparam param="/logging/file/log_data"> true </rosparam>
+        <rosparam param="/logging/file/log_debug"> true </rosparam>
+        <rosparam param="/logging/file/log_info"> true </rosparam>
+        <rosparam param="/logging/file/log_warning"> true </rosparam>
+        <rosparam param="/logging/file/log_error"> true </rosparam>
+
+        <!-- =================================================================== -->
+        <!-- avl_comms nodes -->
+        <!-- =================================================================== -->
+
+        <node name="comms_manager_node" pkg="avl_comms" type="comms_manager_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)comms_manager_node.config"/>
+        </node>
+
+        <node name="ethernet_channel_node" pkg="avl_comms" type="ethernet_channel_node"
+            required="true" clear_params="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)ethernet_channel_node.config"/>
+        </node>
+
+        <node name="acoustic_channel_node" pkg="avl_comms" type="acoustic_channel_node"
+            required="true" clear_params="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)acoustic_channel_node.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- avl_system nodes -->
+        <!-- =================================================================== -->
+
+        <node name="heartbeat_node" pkg="avl_system" type="heartbeat_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)heartbeat_node.config"/>
+        </node>
+
+        <node name="logging_control_node" pkg="avl_system" type="logging_control_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)logging_control_node.config"/>
+        </node>
+
+        <node name="mission_manager_node" pkg="avl_system" type="mission_manager_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)mission_manager_node.config"/>
+        </node>
+
+        <node name="parameter_node" pkg="avl_system" type="parameter_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)parameter_node.config"/>
+        </node>
+
+        <node name="safety_node" pkg="avl_system" type="safety_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)safety_node.config"/>
+        </node>
+
+        <node name="system_command_node" pkg="avl_system" type="system_command_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)system_command_node.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- avl_guidance nodes -->
+        <!-- =================================================================== -->
+
+        <node name="command_guidance_node" pkg="avl_guidance" type="command_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)command_guidance_node.config"/>
+        </node>
+
+        <node name="dive_guidance_node" pkg="avl_guidance" type="dive_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)dive_guidance_node.config"/>
+        </node>
+
+        <node name="figure_eight_guidance_node" pkg="avl_guidance" type="figure_eight_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)figure_eight_guidance_node.config"/>
+        </node>
+
+        <node name="follow_guidance_node" pkg="avl_guidance" type="follow_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)follow_guidance_node.config"/>
+        </node>
+
+        <node name="line_guidance_node" pkg="avl_guidance" type="line_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)line_guidance_node.config"/>
+        </node>
+
+        <node name="loiter_guidance_node" pkg="avl_guidance" type="loiter_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)loiter_guidance_node.config"/>
+        </node>
+
+        <node name="pitch_zigzag_guidance_node" pkg="avl_guidance" type="pitch_zigzag_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)pitch_zigzag_guidance_node.config"/>
+        </node>
+
+        <node name="primitive_guidance_node" pkg="avl_guidance" type="primitive_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)primitive_guidance_node.config"/>
+        </node>
+
+        <node name="spiral_guidance_node" pkg="avl_guidance" type="spiral_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)spiral_guidance_node.config"/>
+        </node>
+
+        <node name="waypoint_guidance_node" pkg="avl_guidance" type="waypoint_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)waypoint_guidance_node.config"/>
+        </node>
+
+        <node name="yaw_zigzag_guidance_node" pkg="avl_guidance" type="yaw_zigzag_guidance_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)yaw_zigzag_guidance_node.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- avl_control nodes -->
+        <!-- =================================================================== -->
+
+        <node name="height_control_node" pkg="avl_control" type="height_control_node"
+            clear_params="true" required="true" output="screen">
+              <rosparam command="load" file="$(arg config_folder_path)height_control_node.config"/>
+        </node>
+
+        <node name="ss_line_control_node" pkg="avl_control" type="ss_line_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)ss_line_control_node.config"/>
+        </node>
+
+        <node name="orbit_control_node" pkg="avl_control" type="orbit_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)orbit_control_node.config"/>
+        </node>
+
+        <node name="rpm_control_node" pkg="avl_control" type="rpm_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)rpm_control_node.config"/>
+        </node>
+
+        <node name="speed_control_node" pkg="avl_control" type="speed_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)speed_control_node.config"/>
+        </node>
+
+        <node name="pid_attitude_control_node" pkg="avl_control" type="pid_attitude_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)pid_attitude_control_node.config"/>
+        </node>
+
+        <node name="pid_depth_control_node" pkg="avl_control" type="pid_depth_control_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)pid_depth_control_node_ss.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- avl_navigation nodes -->
+        <!-- =================================================================== -->
+
+        <node name="inertial_nav_node" pkg="avl_navigation" type="inertial_nav_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)inertial_nav_node.config"/>
+        </node>
+
+        <!-- <node name="sensor_nav_node" pkg="avl_navigation" type="sensor_nav_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)sensor_nav_node.config"/>
+        </node> -->
+
+        <!-- =================================================================== -->
+        <!-- avl_devices nodes -->
+        <!-- =================================================================== -->
+
+        <node name="actuators_node" pkg="avl_devices" type="actuators_node"
+            clear_params="true" output="screen" required="true">
+            <rosparam command="load" file="$(arg config_folder_path)actuators_node.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- avl_simulation nodes -->
+        <!-- =================================================================== -->
+
+        <node name="dynamics_manager_node" pkg="avl_simulation" type="dynamics_manager_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)dynamics_manager_node.config"/>
+        </node>
+
+        <!-- <node name="simulation_time_node" pkg="avl_simulation" type="simulation_time_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)simulation_time_node.config"/>
+        </node> -->
+
+        <node name="auv_dynamics_node" pkg="avl_simulation" type="auv_dynamics_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)auv_dynamics_node.config"/>
+        </node>
+
+        <node name="ahrs_sim_node" pkg="avl_simulation" type="ahrs_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)ahrs_sim_node.config"/>
+        </node>
+
+        <node name="depth_sim_node" pkg="avl_simulation" type="depth_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)depth_sim_node.config"/>
+        </node>
+
+        <node name="dvl_sim_node" pkg="avl_simulation" type="dvl_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)dvl_sim_node.config"/>
+        </node>
+
+        <node name="gps_sim_node" pkg="avl_simulation" type="gps_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)gps_sim_node.config"/>
+        </node>
+
+        <!-- <node name="height_sim_node" pkg="avl_simulation" type="height_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)height_sim_node.config"/>
+        </node> -->
+
+        <node name="imu_sim_node" pkg="avl_simulation" type="imu_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)imu_sim_node.config"/>
+        </node>
+
+        <node name="lbl_range_sim_node" pkg="avl_simulation" type="lbl_range_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)lbl_range_sim_node.config"/>
+        </node>
+
+        <!-- <node name="multibeam_sonar_sim_node" pkg="avl_simulation" type="multibeam_sonar_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)multibeam_sonar_sim_node.config"/>
+        </node> -->
+
+        <node name="pingdsp_sonar_sim_node" pkg="avl_simulation" type="pingdsp_sonar_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)pingdsp_sonar_sim_node.config"/>
+        </node>
+
+        <node name="rpm_sim_node" pkg="avl_simulation" type="rpm_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)rpm_sim_node.config"/>
+        </node>
+
+        <node name="whoi_micromodem_sim_node" pkg="avl_simulation" type="whoi_micromodem_sim_node"
+            clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)whoi_micromodem_sim_node.config"/>
+        </node>
+
+        <!-- =================================================================== -->
+        <!-- Tester Nodes -->
+        <!-- =================================================================== -->
+
+        <!-- <node name="fsd_tester_node" pkg="avl_comms" type="fsd_tester_node"
+                clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)fsd_tester_node.config"/>
+        </node> -->
+
+        <!-- <node name="bsd_tester_node" pkg="avl_comms" type="bsd_tester_node"
+                clear_params="true" required="true" output="screen">
+            <rosparam command="load" file="$(arg config_folder_path)bsd_tester_node.config"/>
+        </node> -->
+
+
+        <!-- =================================================================== -->
+        <!-- rosbridge -->
+        <!-- =================================================================== -->
+
+        <!-- <include file="$(find rosbridge_server)/launch/rosbridge_tcp.launch">
+           <arg name="bson_only_mode" value="false"/>
+        </include> -->
+    </group>
+</launch>
