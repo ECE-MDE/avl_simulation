@@ -22,6 +22,7 @@
 // ROS message includes
 #include <avl_msgs/VehicleStateMsg.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 using namespace avl_msgs;
 
 // Eigen library
@@ -67,6 +68,11 @@ private:
     // will not be iterated until vehicle state is initialized
     bool state_initialized = false;
 
+    // Subscriber for fault gen state
+    ros::Subscriber fault_zero_sub;
+    // Flags for fault gen
+    bool fault_zero = false;
+
 private:
 
     //--------------------------------------------------------------------------
@@ -78,6 +84,11 @@ private:
     {
         state_initialized = true;
         alt = message.alt;
+    }
+
+    void fault_zero_callback(const std_msgs::Bool message)
+    {
+        fault_zero = message.data;
     }
 
     //--------------------------------------------------------------------------
@@ -100,7 +111,11 @@ private:
 
             // Create and publish the simulated depth sensor message
             std_msgs::Float64 depth_msg;
-            depth_msg.data = depth_meas(0);
+            if(fault_zero) {
+                depth_msg.data = 0;
+            } else {
+                depth_msg.data = depth_meas(0);
+            }
             depth_pub.publish(depth_msg);
 
             log_data("[depth] %.9f", depth_msg.data);
@@ -130,6 +145,8 @@ private:
         depth_pub = node_handle->advertise<std_msgs::Float64>("device/depth", 1);
         state_sub = node_handle->subscribe("sim/state", 1,
             &DepthSimNode::state_msg_callback, this);
+        fault_zero_sub = node_handle->subscribe("fault_gen/depth_sensor_zero", 1, 
+            &DepthSimNode::fault_zero_callback, this);
 
         // Set up the iteration timer. Creating the timer also starts it
         double dt = 1.0/get_param<float>("~iteration_rate");
