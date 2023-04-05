@@ -25,6 +25,7 @@
 // ROS message includes
 #include <avl_msgs/VehicleStateMsg.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 using namespace avl_msgs;
 
 // Eigen library
@@ -70,6 +71,9 @@ private:
     // We want to receive an initial message before iterating
     bool rpm_initialized = false;
 
+    ros::Subscriber fault_zero_sub;
+    bool fault_zero = false;
+
 private:
 
     //--------------------------------------------------------------------------
@@ -81,6 +85,11 @@ private:
     {
         rpm_initialized = true;
         rpm = message.rpm;
+    }
+
+    void fault_zero_callback(const std_msgs::Bool message)
+    {
+        fault_zero = message.data;
     }
 
     //--------------------------------------------------------------------------
@@ -100,7 +109,11 @@ private:
 
             // Create and publish the simulated RPM sensor message
             std_msgs::Float64 rpm_msg;
-            rpm_msg.data = avl::clamp(rpm_meas(0), 0.0, 5000.0);
+            if(fault_zero) {
+                rpm_msg.data = 0;
+            } else {
+                rpm_msg.data = avl::clamp(rpm_meas(0), 0.0, 5000.0);
+            }
             rpm_pub.publish(rpm_msg);
 
             log_data("[rpm] %.9f", rpm_msg.data);
@@ -126,6 +139,8 @@ private:
         rpm_pub = node_handle->advertise<std_msgs::Float64>("device/rpm", 1);
         state_sub = node_handle->subscribe("sim/state", 1,
             &RpmSimNode::state_msg_callback, this);
+        fault_zero_sub = node_handle->subscribe("fault_gen/rpm_zero", 1, 
+            &RpmSimNode::fault_zero_callback, this);
 
         // Set up the iteration timer. Creating the timer also starts it
         double dt = 1.0/get_param<float>("~iteration_rate");
