@@ -31,6 +31,8 @@ using namespace avl_msgs;
 #include <Eigen/Dense>
 using namespace Eigen;
 
+#include <std_msgs/Bool.h>
+
 //==============================================================================
 //                              NODE DEFINITION
 //==============================================================================
@@ -72,6 +74,22 @@ private:
     // will not be iterated until vehicle state is initialized
     bool state_initialized = false;
 
+    bool accel_zero = false;
+    bool vel_zero = false;
+    bool accel_noisy = false;
+    bool vel_noisy = false;
+    bool accel_hold = false;
+    bool vel_hold = false;
+
+    SensorModel fault_gyro_err;
+    SensorModel fault_accel_err;
+
+    ros::Subscriber accel_zero_sub;
+    ros::Subscriber vel_zero_sub;
+    ros::Subscriber accel_noisy_sub;
+    ros::Subscriber vel_noisy_sub;
+    ros::Subscriber accel_hold_sub;
+    ros::Subscriber vel_hold_sub;
 private:
 
     //--------------------------------------------------------------------------
@@ -82,12 +100,16 @@ private:
     void state_msg_callback(const VehicleStateMsg message)
     {
         state_initialized = true;
-        w_ib_b(0) = message.w_ib_b_x;
-        w_ib_b(1) = message.w_ib_b_y;
-        w_ib_b(2) = message.w_ib_b_z;
-        f_ib_b(0) = message.f_ib_b_x;
-        f_ib_b(1) = message.f_ib_b_y;
-        f_ib_b(2) = message.f_ib_b_z;
+        if(!vel_hold) {
+            w_ib_b(0) = message.w_ib_b_x;
+            w_ib_b(1) = message.w_ib_b_y;
+            w_ib_b(2) = message.w_ib_b_z;
+        }
+        if(!accel_hold) {
+            f_ib_b(0) = message.f_ib_b_x;
+            f_ib_b(1) = message.f_ib_b_y;
+            f_ib_b(2) = message.f_ib_b_z;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -102,8 +124,28 @@ private:
         {
 
             // Add sensor noise
-            Vector3d w_ib_b_meas = gyro_err.add_error(w_ib_b);
-            Vector3d f_ib_b_meas = accel_err.add_error(f_ib_b);
+            Vector3d w_ib_b_meas;
+            Vector3d f_ib_b_meas;
+
+            if(vel_noisy) {
+                w_ib_b_meas = fault_gyro_err.add_error(w_ib_b);
+            } else {
+                w_ib_b_meas = gyro_err.add_error(w_ib_b);
+            }
+
+            if(accel_noisy) {
+                f_ib_b_meas = fault_accel_err.add_error(f_ib_b);
+            } else {
+                f_ib_b_meas = accel_err.add_error(f_ib_b);
+            }
+
+            if(vel_zero) {
+                w_ib_b_meas.setZero();
+            }
+
+            if(accel_zero) {
+                f_ib_b_meas.setZero();
+            }
 
             // Create and publish the simulated IMU message
             ImuMsg imu_msg;
@@ -150,10 +192,37 @@ private:
         gyro_err = SensorModel::from_config_file("gyro_err");
         accel_err = SensorModel::from_config_file("accel_err");
 
+        // Configure the sensor fault error models
+        fault_gyro_err = SensorModel::from_config_file("fault_gyro_err");
+        fault_accel_err = SensorModel::from_config_file("fault_accel_err");
+
         // Set up the publishers and subscribers
         imu_pub  = node_handle->advertise<ImuMsg>("device/imu", 1);
         state_sub = node_handle->subscribe("sim/state", 1,
             &ImuSimNode::state_msg_callback, this);
+
+        accel_zero_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_accel_zero", 1,
+            [&](auto msg){accel_zero = msg.data;});
+        vel_zero_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_vel_zero", 1,
+            [&](auto msg){vel_zero = msg.data;});
+        accel_noisy_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_accel_noisy", 1,
+            [&](auto msg){accel_noisy = msg.data;});
+        vel_noisy_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_vel_noisy", 1,
+            [&](auto msg){vel_noisy = msg.data;});
+        accel_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_accel_hold", 1,
+            [&](auto msg){accel_hold = msg.data;});
+        vel_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_vel_hold", 1,
+            [&](auto msg){vel_hold = msg.data;});
+        // vel_zero_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_zero", 1,
+        //     [&](const std_msgs::Bool &msg){vel_zero = msg.data;});
+        // accel_noisy_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_accel_noisy", 1,
+        //     [&](const std_msgs::Bool &msg){accel_noisy = msg.data;});
+        // vel_noisy_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_noisy", 1,
+        //     [&](const std_msgs::Bool &msg){vel_noisy = msg.data;});
+        // accel_hold_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_accel_hold", 1,
+        //     [&](const std_msgs::Bool &msg){accel_hold = msg.data;});
+        // vel_hold_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_hold", 1,
+        //     [&](const std_msgs::Bool &msg){vel_hold = msg.data;});
 
         // Set up the iteration timer. Creating the timer also starts it
         dt = 1.0/get_param<float>("~iteration_rate");
