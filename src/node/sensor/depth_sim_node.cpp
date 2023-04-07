@@ -68,10 +68,19 @@ private:
     // will not be iterated until vehicle state is initialized
     bool state_initialized = false;
 
-    // Subscriber for fault gen state
-    ros::Subscriber fault_zero_sub;
     // Flags for fault gen
     bool fault_zero = false;
+    bool fault_hold = false;
+    bool fault_noisy = false;
+
+    // Subscriber for fault gen state
+    ros::Subscriber fault_zero_sub;
+    ros::Subscriber fault_hold_sub;
+    ros::Subscriber fault_noisy_sub;
+
+    // Sensor error model for fault
+    SensorModel fault_depth_err;
+    VectorXd depth_meas;
 
 private:
 
@@ -84,11 +93,6 @@ private:
     {
         state_initialized = true;
         alt = message.alt;
-    }
-
-    void fault_zero_callback(const std_msgs::Bool message)
-    {
-        fault_zero = message.data;
     }
 
     //--------------------------------------------------------------------------
@@ -106,16 +110,20 @@ private:
             VectorXd depth(1);
             depth << alt_sealevel - alt;
 
-            // Add depth sensor noise to the true value
-            VectorXd depth_meas = depth_err.add_error(depth);
+            if(!fault_hold) {
+                if(fault_noisy) {
+                    depth_meas = fault_depth_err.add_error(depth);
+                } else {
+                    depth_meas = depth_err.add_error(depth);
+                }
+                if(fault_zero) {
+                    depth_meas(0) = 0;
+                }
+            }
 
             // Create and publish the simulated depth sensor message
             std_msgs::Float64 depth_msg;
-            if(fault_zero) {
-                depth_msg.data = 0;
-            } else {
-                depth_msg.data = depth_meas(0);
-            }
+            depth_msg.data = depth_meas(0);
             depth_pub.publish(depth_msg);
 
             log_data("[depth] %.9f", depth_msg.data);
@@ -140,13 +148,19 @@ private:
 
         // Configure the sensor error model
         depth_err = SensorModel::from_config_file("depth_err");
+        fault_depth_err = SensorModel::from_config_file("fault_depth_err");
 
         // Set up the publishers and subscribers
         depth_pub = node_handle->advertise<std_msgs::Float64>("device/depth", 1);
         state_sub = node_handle->subscribe("sim/state", 1,
             &DepthSimNode::state_msg_callback, this);
-        fault_zero_sub = node_handle->subscribe("fault_gen/depth_sensor_zero", 1, 
-            &DepthSimNode::fault_zero_callback, this);
+
+        fault_noisy_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_noisy", 1, 
+            [&](auto msg){fault_noisy = true;});
+        fault_zero_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_zero", 1, 
+            [&](auto msg){fault_zero = true;});
+        fault_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_hold", 1, 
+            [&](auto msg){fault_hold = true;});
 
         // Set up the iteration timer. Creating the timer also starts it
         double dt = 1.0/get_param<float>("~iteration_rate");
