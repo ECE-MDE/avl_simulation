@@ -24,7 +24,9 @@
 
 // ROS messages
 #include <avl_msgs/VehicleDynamicsSrv.h>
+#include <std_msgs/Bool.h>
 using namespace avl_msgs;
+using namespace std_msgs;
 
 // Eigen library
 #include <Eigen/Dense>
@@ -95,6 +97,9 @@ private:
     double Z_uude;
     double N_uudr;
     double M_uude;
+
+    bool rpm_zero = false;
+    ros::Subscriber rpm_zero_sub;
 
 private:
 
@@ -384,6 +389,9 @@ private:
         // Calculate RPM from throttle
         double rpm = avl::linear_scale(req.throttle,
             0.0, 100.0, 0.0, max_rpm);
+        if(rpm_zero) {
+            rpm = 0;    
+        }
 
         // Calculate velocity and thrust from RPM to velocity equation and
         // hydrodynamic cpefficients
@@ -529,6 +537,8 @@ private:
         Z_uude = get_param<double>("~Z_uude");
         N_uudr = get_param<double>("~N_uudr");
         M_uude = get_param<double>("~M_uude");
+
+        rpm_zero_sub = node_handle->subscribe<Bool, const Bool &>("fault_gen/rpm_zero", 1, [&](auto msg){rpm_zero=msg.data;});
 
         // Set up the dynamics service server
         dynamics_server = node_handle->advertiseService("sim/dynamics",
