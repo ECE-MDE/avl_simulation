@@ -139,7 +139,7 @@ private:
         rpm_pub = node_handle->advertise<std_msgs::Float64>("device/rpm", 1);
         state_sub = node_handle->subscribe("sim/state", 1,
             &RpmSimNode::state_msg_callback, this);
-        fault_zero_sub = node_handle->subscribe("fault_gen/rpm_zero", 1, 
+        fault_zero_sub = node_handle->subscribe("fault_gen/rpm_sensor_zero", 1, 
             &RpmSimNode::fault_zero_callback, this);
 
         // Set up the iteration timer. Creating the timer also starts it
