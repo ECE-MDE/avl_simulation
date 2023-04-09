@@ -156,11 +156,11 @@ private:
             &DepthSimNode::state_msg_callback, this);
 
         fault_noisy_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_noisy", 1, 
-            [&](auto msg){fault_noisy = true;});
+            [&](auto msg){fault_noisy = msg.data;});
         fault_zero_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_zero", 1, 
-            [&](auto msg){fault_zero = true;});
+            [&](auto msg){fault_zero = msg.data;});
         fault_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/depth_sensor_hold", 1, 
-            [&](auto msg){fault_hold = true;});
+            [&](auto msg){fault_hold = msg.data;});
 
         // Set up the iteration timer. Creating the timer also starts it
         double dt = 1.0/get_param<float>("~iteration_rate");
