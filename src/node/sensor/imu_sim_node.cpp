@@ -212,19 +212,8 @@ private:
         accel_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_accel_hold", 1,
             [&](auto msg){accel_hold = msg.data;});
         vel_hold_sub = node_handle->subscribe<std_msgs::Bool, const std_msgs::Bool &>("fault_gen/imu_vel_hold", 1,
-            [&](auto msg){vel_hold = msg.data;});
-        // vel_zero_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_zero", 1,
-        //     [&](const std_msgs::Bool &msg){vel_zero = msg.data;});
-        // accel_noisy_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_accel_noisy", 1,
-        //     [&](const std_msgs::Bool &msg){accel_noisy = msg.data;});
-        // vel_noisy_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_noisy", 1,
-        //     [&](const std_msgs::Bool &msg){vel_noisy = msg.data;});
-        // accel_hold_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_accel_hold", 1,
-        //     [&](const std_msgs::Bool &msg){accel_hold = msg.data;});
-        // vel_hold_sub = node_handle->subscribe<std_msgs::Bool>("fault_gen/imu_vel_hold", 1,
-        //     [&](const std_msgs::Bool &msg){vel_hold = msg.data;});
+            [&](auto msg){vel_hold = msg.data;});        // Set up the iteration timer. Creating the timer also starts it
 
-        // Set up the iteration timer. Creating the timer also starts it
         dt = 1.0/get_param<float>("~iteration_rate");
         iterate_timer = node_handle->createTimer(ros::Duration(dt),
             &ImuSimNode::iterate_timer_callback, this);

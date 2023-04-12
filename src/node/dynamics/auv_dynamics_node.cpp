@@ -99,7 +99,9 @@ private:
     double M_uude;
 
     bool rpm_zero = false;
+    bool hull_drag = false;
     ros::Subscriber rpm_zero_sub;
+    ros::Subscriber hull_drag_sub;
 
 private:
 
@@ -392,6 +394,11 @@ private:
         if(rpm_zero) {
             rpm = 0;    
         }
+        if(hull_drag) {
+            X_uu = -.03244;
+        } else {
+            X_uu = -3.244;
+        }
 
         // Calculate velocity and thrust from RPM to velocity equation and
         // hydrodynamic cpefficients
@@ -539,6 +546,7 @@ private:
         M_uude = get_param<double>("~M_uude");
 
         rpm_zero_sub = node_handle->subscribe<Bool, const Bool &>("fault_gen/rpm_zero", 1, [&](auto msg){rpm_zero=msg.data;});
+        hull_drag_sub = node_handle->subscribe<Bool, const Bool &>("fault_gen/hull_drag", 1, [&](auto msg){hull_drag=msg.data;});
 
         // Set up the dynamics service server
         dynamics_server = node_handle->advertiseService("sim/dynamics",
